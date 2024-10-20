@@ -1,147 +1,78 @@
 import "./App.css";
 import { supabase } from "./createClient";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function App() {
-    const [users, setUsers] = useState([]);
-
-    const [user, setUser] = useState({
-        name: "",
-        age: ""
-    });
-
-    const [user2, setUser2] = useState({
-        id: "",
-        name: "",
-        age: ""
-    });
-
-    console.log(user2);
+    const [players, setPlayers] = useState([]);
 
     useEffect(() => {
-        fetchUsers();
+        fetchPlayers();
     }, []);
 
-    async function fetchUsers() {
-        const { data } = await supabase.from("users").select("*");
-        setUsers(data);
-    }
-
-    function handleChange(event) {
-        setUser((prevFormData) => {
-            return {
-                ...prevFormData,
-                [event.target.name]: event.target.value
-            };
-        });
-    }
-
-    function handleChange2(event) {
-        setUser2((prevFormData) => {
-            return {
-                ...prevFormData,
-                [event.target.name]: event.target.value
-            };
-        });
-    }
-
-    async function createUser() {
-        await supabase.from("users").insert({ name: user.name, age: user.age });
-
-        fetchUsers();
-    }
-
-    async function deleteUser(userId) {
-        const { data, error } = await supabase.from("users").delete().eq("id", userId);
-
-        fetchUsers();
-
-        if (error) {
-            console.log(error);
-        }
-
-        if (data) {
-            console.log(data);
-        }
-    }
-
-    function displayUser(userId) {
-        users.map((user) => {
-            if (user.id == userId) {
-                setUser2({ id: user.id, name: user.name, age: user.age });
-            }
-        });
-    }
-
-    async function updateUser(userId) {
+    async function fetchPlayers() {
         const { data, error } = await supabase
-            .from("users")
-            .update({ id: user2.id, name: user2.name, age: user2.age })
-            .eq("id", userId);
-
-        fetchUsers();
+            .from("players")
+            .select("first_name, last_name, nickname, rank, last_rank")
+            .order("rank", { ascending: true }); // Sort by rank ascending
 
         if (error) {
-            console.log(error);
-        }
-
-        if (data) {
-            console.log(data);
+            console.error("Error fetching players:", error);
+        } else {
+            setPlayers(data); // Set fetched players into state
         }
     }
+
+    // Function to determine the rank change emoji and corresponding color
+    const getRankChange = (rank, lastRank) => {
+        if (lastRank === null) return { emoji: "➡️", color: "" }; // Grey if last_rank is NULL
+        if (rank < lastRank) return { emoji: "⬆️", color: "text-green-500" }; // Green if rank improved
+        if (rank > lastRank) return { emoji: "⬇️", color: "text-red-500" }; // Red if rank dropped
+        return { emoji: "➡️", color: "" }; // Grey if rank is the same
+    };
 
     return (
-        <div>
-            {/* FORM 1 */}
-            <form onSubmit={createUser}>
-                <input type="text" placeholder="Name" name="name" onChange={handleChange} />
-                <input type="number" placeholder="Age" name="age" onChange={handleChange} />
-                <button type="submit">Create</button>
-            </form>
+        <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+            <div className="container mx-auto p-4">
+                <h1 className="text-2xl font-bold mb-6 text-center">Player Rankings</h1>
 
-            {/* FORM 2 */}
-            <form onSubmit={() => updateUser(user2.id)}>
-                <input type="text" name="name" onChange={handleChange2} defaultValue={user2.name} />
-                <input type="number" name="age" onChange={handleChange2} defaultValue={user2.age} />
-                <button type="submit">Save Changes</button>
-            </form>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Name</th>
-                        <th>Age</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {users.map((user) => (
-                        <tr key={user.id}>
-                            <td>{user.id}</td>
-                            <td>{user.name}</td>
-                            <td>{user.age}</td>
-                            <td>
-                                <button
-                                    onClick={() => {
-                                        deleteUser(user.id);
-                                    }}
-                                >
-                                    Delete
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        displayUser(user.id);
-                                    }}
-                                >
-                                    Edit
-                                </button>
-                            </td>
+                <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                    <thead>
+                        <tr>
+                            <th className="px-4 py-2 text-left bg-gray-200">Rank</th>
+                            <th className="px-4 py-2 text-left bg-gray-200">First Name</th>
+                            <th className="px-4 py-2 text-left bg-gray-200">Last Name</th>
+                            <th className="px-4 py-2 text-left bg-gray-200">Nickname</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {players.length > 0 ? (
+                            players.map((player) => {
+                                const { emoji, color } = getRankChange(
+                                    player.rank,
+                                    player.last_rank
+                                );
+
+                                return (
+                                    <tr key={player.nickname} className="border-b">
+                                        <td className={`px-4 py-2 ${color}`}>
+                                            {player.rank} <span className="ml-2">{emoji}</span>
+                                        </td>
+                                        <td className="px-4 py-2">{player.first_name}</td>
+                                        <td className="px-4 py-2">{player.last_name}</td>
+                                        <td className="px-4 py-2">{player.nickname || "N/A"}</td>
+                                    </tr>
+                                );
+                            })
+                        ) : (
+                            <tr>
+                                <td colSpan="4" className="text-center py-4">
+                                    No players found
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
