@@ -1,22 +1,12 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../createClient";
+import { fetchAllPlayers } from "../services/database";
 
 export default function Standings() {
     const [players, setPlayers] = useState([]);
 
     useEffect(() => {
-        fetchPlayers();
+        fetchAllPlayers().then((data) => setPlayers(data));
     }, []);
-
-    async function fetchPlayers() {
-        const { data, error } = await supabase
-            .from("players")
-            .select("first_name, last_name, nickname, rank, last_rank")
-            .order("rank", { ascending: true });
-
-        if (error) console.error(error);
-        else setPlayers(data);
-    }
 
     const getRankChangeEmoji = (rank, lastRank) => {
         if (lastRank === null) return "➡️";

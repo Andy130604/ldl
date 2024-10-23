@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../createClient";
+import { supabase } from "../services/supabaseClient";
 
 export default function Matches() {
     const [matches, setMatches] = useState([]);

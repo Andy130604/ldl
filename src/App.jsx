@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Standings from "./pages/Standings";
 import Matches from "./pages/Matches";
 import Rules from "./pages/Rules";
@@ -15,43 +15,101 @@ export default function App() {
     return (
         <Router>
             <div
-                className={`min-h-screen ${
+                className={`min-h-screen transition-colors duration-300 ${
                     isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
                 }`}
             >
-                <nav className={`bg-blue-500 p-4 ${isDarkMode ? "dark:bg-gray-800" : ""}`}>
-                    <div className="container mx-auto flex justify-between items-center">
-                        <ul className="flex space-x-4">
-                            <li>
-                                <Link to="/" className="hover:text-gray-200">
-                                    Classement
+                <nav className="bg-gray-100 dark:bg-gray-800 shadow-md">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            {/* Logo or Branding */}
+                            <div className="text-lg font-bold">
+                                <Link
+                                    to="/"
+                                    className="text-gray-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                >
+                                    La Ligue des Légendes
                                 </Link>
-                            </li>
-                            <li>
-                                <Link to="/matches" className="hover:text-gray-200">
-                                    Matchs
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/rules" className="hover:text-gray-200">
-                                    Règles
-                                </Link>
-                            </li>
-                        </ul>
-                        <button
-                            onClick={toggleDarkMode}
-                            className="bg-gray-700 text-white px-4 py-2 rounded-md focus:outline-none"
-                        >
-                            {isDarkMode ? "Mode Clair" : "Mode Sombre"}
-                        </button>
+                            </div>
+
+                            {/* Menu items */}
+                            <ul className="hidden md:flex space-x-8">
+                                <li>
+                                    <Link
+                                        to="/"
+                                        className="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                    >
+                                        Classement
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to="/matches"
+                                        className="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                    >
+                                        Matchs
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to="/rules"
+                                        className="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                    >
+                                        Règles
+                                    </Link>
+                                </li>
+                            </ul>
+
+                            {/* Dark Mode Toggle */}
+                            <div className="flex items-center">
+                                <button
+                                    onClick={toggleDarkMode}
+                                    className="bg-gray-200 dark:bg-gray-700 p-2 rounded-full text-gray-700 dark:text-gray-300 focus:outline-none transition-colors duration-300"
+                                >
+                                    {isDarkMode ? (
+                                        <svg
+                                            className="h-5 w-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M20.354 15.354A9 9 0 118.646 3.646a7 7 0 0011.708 11.708z"
+                                            ></path>
+                                        </svg>
+                                    ) : (
+                                        <svg
+                                            className="h-5 w-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M12 3v1m0 16v1m8.66-9.66h-1M4.34 12h-1m15.36 4.66l-.71-.71M6.34 6.34l-.71-.71m12.02 0l-.71.71M6.34 17.66l-.71.71M12 8a4 4 0 100 8 4 4 0 000-8z"
+                                            ></path>
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </nav>
 
-                <Routes>
-                    <Route path="/" element={<Standings />} />
-                    <Route path="/matches" element={<Matches />} />
-                    <Route path="/rules" element={<Rules />} />
-                </Routes>
+                <main className="p-6 max-w-7xl mx-auto">
+                    <Routes>
+                        <Route path="/" element={<Standings />} />
+                        <Route path="/matches" element={<Matches />} />
+                        <Route path="/rules" element={<Rules />} />
+                    </Routes>
+                </main>
             </div>
         </Router>
     );
