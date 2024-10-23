@@ -1,37 +1,17 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../services/supabaseClient";
+import { fetchAllMatches, fetchAllPlayers } from "../services/database";
+import { createPlayersMap } from "../services/utils";
 
 export default function Matches() {
     const [matches, setMatches] = useState([]);
     const [players, setPlayers] = useState({});
 
     useEffect(() => {
-        fetchMatches();
-        fetchPlayers();
+        fetchAllMatches().then((data) => setMatches(data));
+        fetchAllPlayers().then((data) => {
+            setPlayers(createPlayersMap(data));
+        });
     }, []);
-
-    async function fetchMatches() {
-        const { data, error } = await supabase
-            .from("matches")
-            .select("*")
-            .order("scheduled_at", { ascending: true });
-
-        if (error) console.error(error);
-        else setMatches(data);
-    }
-
-    async function fetchPlayers() {
-        const { data, error } = await supabase.from("players").select("id, first_name, last_name");
-
-        if (error) console.error(error);
-        else {
-            const playersMap = {};
-            data.forEach((player) => {
-                playersMap[player.id] = `${player.first_name} ${player.last_name}`;
-            });
-            setPlayers(playersMap);
-        }
-    }
 
     const getPlayerName = (id) => players[id] || "Inconnu";
 

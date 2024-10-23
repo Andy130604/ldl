@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Standings from "./pages/Standings";
+import { Link, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Matches from "./pages/Matches";
 import Rules from "./pages/Rules";
+import Standings from "./pages/Standings";
 
 export default function App() {
     const [isDarkMode, setIsDarkMode] = useState(false);
