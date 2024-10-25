@@ -1,22 +1,37 @@
 import { useEffect, useState } from "react";
-import { fetchAllMatches, fetchAllPlayers, scheduleMatch } from "../services/database";
+import {
+    fetchAllMatches,
+    fetchAllPlayers,
+    scheduleMatch,
+    writeMatchScore,
+    deleteMatch // Import the new delete function
+} from "../services/database";
 import { getPlayerById, getPlayerName } from "../services/utils";
 
 export default function Matches() {
     const [matches, setMatches] = useState([]);
     const [players, setPlayers] = useState([]);
+    const [showSchedulePopup, setShowSchedulePopup] = useState(false);
+    const [showScorePopup, setShowScorePopup] = useState(false);
+    const [selectedMatch, setSelectedMatch] = useState(null);
+    const [formData, setFormData] = useState({
+        challengee: "",
+        challenger: "",
+        scheduled_at: ""
+    });
+    const [scoreData, setScoreData] = useState([
+        { challengee: "", challenger: "" },
+        { challengee: "", challenger: "" },
+        { challengee: "", challenger: "" }
+    ]);
 
     useEffect(() => {
-        fetchAllPlayers().then((data) => setPlayers(data));
-        fetchAllMatches().then((data) => setMatches(data));
+        refreshData();
     }, []);
 
-    const handleClick = async () => {
-        await scheduleMatch(players[0], players[2], new Date(2024, 10, 5, 10));
-        const newPlayers = await fetchAllPlayers();
-        setPlayers(newPlayers);
-        const data = await fetchAllMatches();
-        setMatches(data);
+    const refreshData = async () => {
+        fetchAllPlayers().then((data) => setPlayers(data));
+        fetchAllMatches().then((data) => setMatches(data));
     };
 
     const splitMatches = () => {
@@ -27,9 +42,58 @@ export default function Matches() {
 
     const { upcoming, played } = splitMatches();
 
+    const handleScheduleSubmit = async () => {
+        const challengee = players.find((p) => p.id == formData.challengee);
+        const challenger = players.find((p) => p.id == formData.challenger);
+        await scheduleMatch(challengee, challenger, formData.scheduled_at);
+        setShowSchedulePopup(false);
+        refreshData();
+    };
+
+    const handleDeleteMatch = async (match) => {
+        try {
+            await deleteMatch(match);
+            refreshData();
+        } catch (error) {
+            console.error("Failed to delete match:", error);
+        }
+    };
+
+    const handleScoreSubmit = async () => {
+        await writeMatchScore(
+            selectedMatch,
+            { sets: scoreData },
+            getPlayerById(selectedMatch.challengee, players),
+            getPlayerById(selectedMatch.challenger, players),
+            players
+        );
+        setShowScorePopup(false);
+        refreshData();
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleScoreChange = (index, player, value) => {
+        const newScoreData = [...scoreData];
+        newScoreData[index] = {
+            ...newScoreData[index],
+            [player]: parseInt(value) || 0 // Convert to integer or set to 0 if input is empty
+        };
+        setScoreData(newScoreData);
+    };
+
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4 text-center dark:text-white">Matchs</h1>
+            <button
+                onClick={() => setShowSchedulePopup(true)}
+                className="bg-green-500 text-white px-4 py-2 rounded mb-4 hover:bg-green-600"
+            >
+                Programmer un match
+            </button>
 
             {/* Upcoming Matches */}
             <section className="mb-8">
@@ -38,13 +102,16 @@ export default function Matches() {
                     <thead>
                         <tr>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
-                                Challengee
+                                Challengé
                             </th>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
                                 Challenger
                             </th>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
                                 Date
+                            </th>
+                            <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
+                                Actions
                             </th>
                         </tr>
                     </thead>
@@ -61,11 +128,28 @@ export default function Matches() {
                                     <td className="px-4 py-2">
                                         {new Date(match.scheduled_at).toLocaleDateString("fr-CH")}
                                     </td>
+                                    <td className="px-4 py-2 flex space-x-2">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedMatch(match);
+                                                setShowScorePopup(true);
+                                            }}
+                                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                        >
+                                            Noter le score
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteMatch(match)}
+                                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                        >
+                                            Supprimer
+                                        </button>
+                                    </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="3" className="text-center py-4 dark:text-white">
+                                <td colSpan="4" className="text-center py-4 dark:text-white">
                                     Pas de matchs à venir
                                 </td>
                             </tr>
@@ -102,7 +186,6 @@ export default function Matches() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {/* Player 1 */}
                                     <tr
                                         className={`player ${
                                             winner === match.challengee
@@ -125,7 +208,6 @@ export default function Matches() {
                                             {score?.sets?.[2]?.challengee ?? ""}
                                         </td>
                                     </tr>
-                                    {/* Player 2 */}
                                     <tr
                                         className={`player ${
                                             winner === match.challenger
@@ -157,9 +239,147 @@ export default function Matches() {
                 )}
             </section>
 
-            <button type="button" className="w-24 h-16 bg-black text-white" onClick={handleClick}>
-                Test Insert
-            </button>
+            {/* Schedule Match Popup */}
+            {showSchedulePopup && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center">
+                    <div className="bg-white dark:bg-gray-800 p-10 rounded-lg shadow-lg w-2/3 max-w-2xl">
+                        <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+                            Programmer un match
+                        </h2>
+                        <label className="block mb-2 dark:text-white">Challengee</label>
+                        <select
+                            name="challengee"
+                            onChange={handleInputChange}
+                            className="mb-4 p-2 border rounded w-full text-black"
+                        >
+                            <option value="">Sélectionnez un joueur</option>
+                            {players
+                                .filter((player) => player.next_opponent === null)
+                                .map((player) => (
+                                    <option
+                                        key={player.id}
+                                        value={player.id}
+                                        className="text-black"
+                                    >
+                                        {getPlayerName(player)}
+                                    </option>
+                                ))}
+                        </select>
+                        <label className="block mb-2 dark:text-white">Challenger</label>
+                        <select
+                            name="challenger"
+                            onChange={handleInputChange}
+                            className="mb-4 p-2 border rounded w-full text-black"
+                        >
+                            <option value="">Sélectionnez un joueur</option>
+                            {players
+                                .filter((player) => player.next_opponent === null)
+                                .map((player) => (
+                                    <option
+                                        key={player.id}
+                                        value={player.id}
+                                        className="text-black"
+                                    >
+                                        {getPlayerName(player)}
+                                    </option>
+                                ))}
+                        </select>
+                        <label className="block mb-2 dark:text-white">Date</label>
+                        <input
+                            type="datetime-local"
+                            name="scheduled_at"
+                            onChange={handleInputChange}
+                            className="mb-4 p-2 border rounded w-full text-black"
+                        />
+                        <button
+                            onClick={handleScheduleSubmit}
+                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2"
+                        >
+                            Programmer
+                        </button>
+                        <button
+                            onClick={() => setShowSchedulePopup(false)}
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        >
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Score Popup */}
+            {showScorePopup && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center">
+                    <div className="bg-white dark:bg-gray-800 p-10 rounded-lg shadow-lg w-2/3 max-w-2xl">
+                        <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+                            Noter le score
+                        </h2>
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                            <div></div>
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold dark:text-white">
+                                    {getPlayerName(
+                                        getPlayerById(selectedMatch.challengee, players)
+                                    )}
+                                </h3>
+                            </div>
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold dark:text-white">
+                                    {getPlayerName(
+                                        getPlayerById(selectedMatch.challenger, players)
+                                    )}
+                                </h3>
+                            </div>
+                        </div>
+                        {["Set 1", "Set 2", "Set 3"].map((set, i) => (
+                            <div key={i} className="grid grid-cols-3 gap-4 items-center mb-4">
+                                {/* Set Label */}
+                                <label className="text-center dark:text-white">{set}</label>
+                                {/* Challengee Score Input */}
+                                <input
+                                    type="number"
+                                    onChange={(e) =>
+                                        handleScoreChange(
+                                            i,
+                                            "challengee",
+                                            parseInt(e.target.value) || 0
+                                        )
+                                    }
+                                    className="p-2 border rounded w-full text-center text-black"
+                                    placeholder="Score"
+                                />
+                                {/* Challenger Score Input */}
+                                <input
+                                    type="number"
+                                    onChange={(e) =>
+                                        handleScoreChange(
+                                            i,
+                                            "challenger",
+                                            parseInt(e.target.value) || 0
+                                        )
+                                    }
+                                    className="p-2 border rounded w-full text-center text-black"
+                                    placeholder="Score"
+                                />
+                            </div>
+                        ))}
+                        <div className="flex justify-end mt-4">
+                            <button
+                                onClick={handleScoreSubmit}
+                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2"
+                            >
+                                Enregistrer
+                            </button>
+                            <button
+                                onClick={() => setShowScorePopup(false)}
+                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                            >
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -5,8 +5,16 @@ export const isValidScore = (score) => {
 };
 
 export const getWinnerIdByScore = (score, challengee, challenger) => {
-    const challengeeSets = score.sets.filter((set) => set.challengee > set.challenger).length;
-    const challengerSets = score.sets.filter((set) => set.challenger > set.challengee).length;
+    let challengeeSets = 0;
+    let challengerSets = 0;
+
+    score.sets.forEach((set) => {
+        if (set.challengee > set.challenger) {
+            challengeeSets++;
+        } else {
+            challengerSets++;
+        }
+    });
 
     if (challengeeSets > challengerSets) return challengee;
     if (challengerSets > challengeeSets) return challenger;

@@ -181,3 +181,18 @@ export const writeMatchScore = async (match, score, challengee, challenger, play
         }
     }
 };
+
+export const deleteMatch = async (match) => {
+    const { error } = await supabase.from("matches").delete().eq("id", match.id);
+    if (error) console.error(error);
+    const { error1 } = await supabase
+        .from("players")
+        .update({ next_opponent: null })
+        .eq("id", match.challengee);
+    if (error1) console.error(error1);
+    const { error2 } = await supabase
+        .from("players")
+        .update({ next_opponent: null })
+        .eq("id", match.challenger);
+    if (error2) console.error(error2);
+};
