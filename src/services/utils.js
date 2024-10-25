@@ -4,19 +4,21 @@ export const isValidScore = (score) => {
     return Array.isArray(score.sets) && score.sets.length === 3;
 };
 
-export const getWinnerIdByScore = (score, player1_id, player2_id) => {
-    const player1Sets = score.sets.filter((set) => set.player1 > set.player2).length;
-    const player2Sets = score.sets.filter((set) => set.player2 > set.player1).length;
+export const getWinnerIdByScore = (score, challengee, challenger) => {
+    const challengeeSets = score.sets.filter((set) => set.challengee > set.challenger).length;
+    const challengerSets = score.sets.filter((set) => set.challenger > set.challengee).length;
 
-    if (player1Sets > player2Sets) return player1_id;
-    if (player2Sets > player1Sets) return player2_id;
+    if (challengeeSets > challengerSets) return challengee;
+    if (challengerSets > challengeeSets) return challenger;
     return null;
 };
 
 export const getPlayerById = (id, players) => {
+    if (!players) return null;
     return players.find((player) => player.id === id);
 };
 
 export const getPlayerName = (player) => {
+    if (!player) return "Jouer inconnu";
     return `${player.first_name} ${player.last_name} (${player.rank})`;
 };

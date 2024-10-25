@@ -21,14 +21,19 @@ export const fetchAllMatches = async () => {
     return data;
 };
 
-export const scheduleMatch = async (player1, player2, scheduled_at) => {
-    if (player1.next_opponent === null && player2.next_opponent === null) {
-        const { data, error1 } = await supabase
+export const scheduleMatch = async (challengee, challenger, scheduled_at) => {
+    if (
+        challengee.next_opponent === null &&
+        challenger.next_opponent === null &&
+        challenger.rank > challengee.rank &&
+        challenger.rank - challengee.rank <= 2
+    ) {
+        const { error1 } = await supabase
             .from("matches")
             .insert([
                 {
-                    player1_id: player1.id,
-                    player2_id: player2.id,
+                    challengee: challengee.id,
+                    challenger: challenger.id,
                     played: false,
                     scheduled_at: scheduled_at
                 }
@@ -40,31 +45,33 @@ export const scheduleMatch = async (player1, player2, scheduled_at) => {
         }
         const { error2 } = await supabase
             .from("players")
-            .update({ next_opponent: player2.id })
-            .eq("id", player1.id);
+            .update({ next_opponent: challenger.id })
+            .eq("id", challengee.id);
         if (error2) {
             console.error(error2);
             return;
         }
         const { error3 } = await supabase
             .from("players")
-            .update({ next_opponent: player1.id })
-            .eq("id", player2.id);
+            .update({ next_opponent: challengee.id })
+            .eq("id", challenger.id);
         if (error3) {
             console.error(error3);
             return;
         }
     } else {
-        console.error("Players already have a match scheduled.");
+        console.error(
+            "Players already have a match scheduled or there is a rank difference greater than 2"
+        );
     }
 };
 
-export const writeMatchScore = async (match, score, player1, player2, players) => {
+export const writeMatchScore = async (match, score, challengee, challenger, players) => {
     if (!isValidScore(score)) {
         console.error("Invalid score format");
         return;
     }
-    const winner_id = getWinnerIdByScore(score, match.player1_id, match.player2_id);
+    const winner_id = getWinnerIdByScore(score, match.challengee, match.challenger);
 
     // Update the match with the score and winner
     const { error1 } = await supabase
@@ -78,20 +85,17 @@ export const writeMatchScore = async (match, score, player1, player2, players) =
     }
 
     // Update the players with the new ranks or matches streaks
-    const isUpset =
-        (winner_id === player1.id && player1.rank > player2.rank) ||
-        (winner_id === player2.id && player2.rank > player1.rank);
-    if (isUpset) {
+    if (winner_id === challengee.id) {
         const { error2 } = await supabase
             .from("players")
             .update({
-                rank: player2.rank,
-                last_rank: player1.rank,
-                last_player_played_id: player2.id,
+                rank: challenger.rank,
+                last_rank: challengee.rank,
+                last_player_played_id: challenger.id,
                 last_played_is_loss: false,
                 next_opponent: null
             })
-            .eq("id", player1.id)
+            .eq("id", challengee.id)
             .select();
         if (error2) {
             console.error(error2);
@@ -100,13 +104,13 @@ export const writeMatchScore = async (match, score, player1, player2, players) =
         const { error3 } = await supabase
             .from("players")
             .update({
-                rank: player1.rank,
-                last_rank: player2.rank,
-                last_player_played_id: player1.id,
+                rank: challengee.rank,
+                last_rank: challenger.rank,
+                last_player_played_id: challengee.id,
                 last_played_is_loss: false,
                 next_opponent: null
             })
-            .eq("id", player2.id)
+            .eq("id", challenger.id)
             .select();
 
         if (error3) {
@@ -114,7 +118,7 @@ export const writeMatchScore = async (match, score, player1, player2, players) =
             return;
         }
     } else {
-        const loser = winner_id === player1.id ? player2 : player1;
+        const loser = winner_id === challengee.id ? challenger : challengee;
         // Update winner
         const { error4 } = await supabase
             .from("players")

@@ -7,16 +7,16 @@ export default function Matches() {
     const [players, setPlayers] = useState([]);
 
     useEffect(() => {
-        fetchAllMatches().then((data) => setMatches(data));
         fetchAllPlayers().then((data) => setPlayers(data));
+        fetchAllMatches().then((data) => setMatches(data));
     }, []);
 
     const handleClick = async () => {
-        await scheduleMatch(players[4], players[5], new Date(2024, 10, 5, 10));
-        const data = await fetchAllMatches();
-        setMatches(data);
+        await scheduleMatch(players[0], players[2], new Date(2024, 10, 5, 10));
         const newPlayers = await fetchAllPlayers();
         setPlayers(newPlayers);
+        const data = await fetchAllMatches();
+        setMatches(data);
     };
 
     const splitMatches = () => {
@@ -38,10 +38,10 @@ export default function Matches() {
                     <thead>
                         <tr>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
-                                Joueur 1
+                                Challengee
                             </th>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
-                                Joueur 2
+                                Challenger
                             </th>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
                                 Date
@@ -53,10 +53,10 @@ export default function Matches() {
                             upcoming.map((match, index) => (
                                 <tr key={index} className="border-b dark:border-gray-700">
                                     <td className="px-4 py-2">
-                                        {getPlayerName(getPlayerById(match.player1_id, players))}
+                                        {getPlayerName(getPlayerById(match.challengee, players))}
                                     </td>
                                     <td className="px-4 py-2">
-                                        {getPlayerName(getPlayerById(match.player2_id, players))}
+                                        {getPlayerName(getPlayerById(match.challenger, players))}
                                     </td>
                                     <td className="px-4 py-2">
                                         {new Date(match.scheduled_at).toLocaleDateString("fr-CH")}
@@ -105,47 +105,47 @@ export default function Matches() {
                                     {/* Player 1 */}
                                     <tr
                                         className={`player ${
-                                            winner === match.player1_id
+                                            winner === match.challengee
                                                 ? "bg-green-200 dark:bg-green-700"
                                                 : ""
                                         }`}
                                     >
                                         <td className="name px-4 py-2">
                                             {getPlayerName(
-                                                getPlayerById(match.player1_id, players)
+                                                getPlayerById(match.challengee, players)
                                             )}
                                         </td>
                                         <td className="set set-1 px-4 py-2">
-                                            {score?.sets?.[0]?.player1 ?? ""}
+                                            {score?.sets?.[0]?.challengee ?? ""}
                                         </td>
                                         <td className="set set-2 px-4 py-2">
-                                            {score?.sets?.[1]?.player1 ?? ""}
+                                            {score?.sets?.[1]?.challengee ?? ""}
                                         </td>
                                         <td className="set set-3 px-4 py-2">
-                                            {score?.sets?.[2]?.player1 ?? ""}
+                                            {score?.sets?.[2]?.challengee ?? ""}
                                         </td>
                                     </tr>
                                     {/* Player 2 */}
                                     <tr
                                         className={`player ${
-                                            winner === match.player2_id
+                                            winner === match.challenger
                                                 ? "bg-green-200 dark:bg-green-700"
                                                 : ""
                                         }`}
                                     >
                                         <td className="name px-4 py-2">
                                             {getPlayerName(
-                                                getPlayerById(match.player2_id, players)
+                                                getPlayerById(match.challenger, players)
                                             )}
                                         </td>
                                         <td className="set set-1 px-4 py-2">
-                                            {score?.sets?.[0]?.player2 ?? ""}
+                                            {score?.sets?.[0]?.challenger ?? ""}
                                         </td>
                                         <td className="set set-2 px-4 py-2">
-                                            {score?.sets?.[1]?.player2 ?? ""}
+                                            {score?.sets?.[1]?.challenger ?? ""}
                                         </td>
                                         <td className="set set-3 px-4 py-2">
-                                            {score?.sets?.[2]?.player2 ?? ""}
+                                            {score?.sets?.[2]?.challenger ?? ""}
                                         </td>
                                     </tr>
                                 </tbody>
