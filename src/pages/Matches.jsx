@@ -1,27 +1,23 @@
 import { useEffect, useState } from "react";
 import { fetchAllMatches, fetchAllPlayers, scheduleMatch } from "../services/database";
-import { createPlayersMap } from "../services/utils";
+import { getPlayerById, getPlayerName } from "../services/utils";
 
 export default function Matches() {
     const [matches, setMatches] = useState([]);
-    const [testPlayers, setTestPlayers] = useState([]);
-    const [players, setPlayers] = useState({});
+    const [players, setPlayers] = useState([]);
 
     useEffect(() => {
         fetchAllMatches().then((data) => setMatches(data));
-        fetchAllPlayers().then((data) => setTestPlayers(data));
-        fetchAllPlayers().then((data) => {
-            setPlayers(createPlayersMap(data));
-        });
+        fetchAllPlayers().then((data) => setPlayers(data));
     }, []);
 
     const handleClick = async () => {
-        await scheduleMatch(testPlayers[4], testPlayers[5], new Date(2024, 11, 5, 11));
+        await scheduleMatch(players[4], players[5], new Date(2024, 10, 5, 10));
         const data = await fetchAllMatches();
         setMatches(data);
+        const newPlayers = await fetchAllPlayers();
+        setPlayers(newPlayers);
     };
-
-    const getPlayerName = (id) => players[id] || "Inconnu";
 
     const splitMatches = () => {
         const upcoming = matches.filter((match) => !match.played);
@@ -56,8 +52,12 @@ export default function Matches() {
                         {upcoming.length > 0 ? (
                             upcoming.map((match, index) => (
                                 <tr key={index} className="border-b dark:border-gray-700">
-                                    <td className="px-4 py-2">{getPlayerName(match.player1_id)}</td>
-                                    <td className="px-4 py-2">{getPlayerName(match.player2_id)}</td>
+                                    <td className="px-4 py-2">
+                                        {getPlayerName(getPlayerById(match.player1_id, players))}
+                                    </td>
+                                    <td className="px-4 py-2">
+                                        {getPlayerName(getPlayerById(match.player2_id, players))}
+                                    </td>
                                     <td className="px-4 py-2">
                                         {new Date(match.scheduled_at).toLocaleDateString("fr-CH")}
                                     </td>
@@ -111,7 +111,9 @@ export default function Matches() {
                                         }`}
                                     >
                                         <td className="name px-4 py-2">
-                                            {getPlayerName(match.player1_id)}
+                                            {getPlayerName(
+                                                getPlayerById(match.player1_id, players)
+                                            )}
                                         </td>
                                         <td className="set set-1 px-4 py-2">
                                             {score?.sets?.[0]?.player1 ?? ""}
@@ -132,7 +134,9 @@ export default function Matches() {
                                         }`}
                                     >
                                         <td className="name px-4 py-2">
-                                            {getPlayerName(match.player2_id)}
+                                            {getPlayerName(
+                                                getPlayerById(match.player2_id, players)
+                                            )}
                                         </td>
                                         <td className="set set-1 px-4 py-2">
                                             {score?.sets?.[0]?.player2 ?? ""}
