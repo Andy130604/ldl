@@ -1,39 +1,23 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../services/supabaseClient";
+import { fetchAllMatches, fetchAllPlayers, scheduleMatch } from "../services/database";
+import { getPlayerById, getPlayerName } from "../services/utils";
 
 export default function Matches() {
     const [matches, setMatches] = useState([]);
-    const [players, setPlayers] = useState({});
+    const [players, setPlayers] = useState([]);
 
     useEffect(() => {
-        fetchMatches();
-        fetchPlayers();
+        fetchAllPlayers().then((data) => setPlayers(data));
+        fetchAllMatches().then((data) => setMatches(data));
     }, []);
 
-    async function fetchMatches() {
-        const { data, error } = await supabase
-            .from("matches")
-            .select("*")
-            .order("scheduled_at", { ascending: true });
-
-        if (error) console.error(error);
-        else setMatches(data);
-    }
-
-    async function fetchPlayers() {
-        const { data, error } = await supabase.from("players").select("id, first_name, last_name");
-
-        if (error) console.error(error);
-        else {
-            const playersMap = {};
-            data.forEach((player) => {
-                playersMap[player.id] = `${player.first_name} ${player.last_name}`;
-            });
-            setPlayers(playersMap);
-        }
-    }
-
-    const getPlayerName = (id) => players[id] || "Inconnu";
+    const handleClick = async () => {
+        await scheduleMatch(players[0], players[2], new Date(2024, 10, 5, 10));
+        const newPlayers = await fetchAllPlayers();
+        setPlayers(newPlayers);
+        const data = await fetchAllMatches();
+        setMatches(data);
+    };
 
     const splitMatches = () => {
         const upcoming = matches.filter((match) => !match.played);
@@ -54,10 +38,10 @@ export default function Matches() {
                     <thead>
                         <tr>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
-                                Joueur 1
+                                Challengee
                             </th>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
-                                Joueur 2
+                                Challenger
                             </th>
                             <th className="px-4 py-2 text-left bg-gray-200 dark:bg-gray-700 dark:text-white">
                                 Date
@@ -68,8 +52,12 @@ export default function Matches() {
                         {upcoming.length > 0 ? (
                             upcoming.map((match, index) => (
                                 <tr key={index} className="border-b dark:border-gray-700">
-                                    <td className="px-4 py-2">{getPlayerName(match.player1_id)}</td>
-                                    <td className="px-4 py-2">{getPlayerName(match.player2_id)}</td>
+                                    <td className="px-4 py-2">
+                                        {getPlayerName(getPlayerById(match.challengee, players))}
+                                    </td>
+                                    <td className="px-4 py-2">
+                                        {getPlayerName(getPlayerById(match.challenger, players))}
+                                    </td>
                                     <td className="px-4 py-2">
                                         {new Date(match.scheduled_at).toLocaleDateString("fr-CH")}
                                     </td>
@@ -117,43 +105,47 @@ export default function Matches() {
                                     {/* Player 1 */}
                                     <tr
                                         className={`player ${
-                                            winner === match.player1_id
+                                            winner === match.challengee
                                                 ? "bg-green-200 dark:bg-green-700"
                                                 : ""
                                         }`}
                                     >
                                         <td className="name px-4 py-2">
-                                            {getPlayerName(match.player1_id)}
+                                            {getPlayerName(
+                                                getPlayerById(match.challengee, players)
+                                            )}
                                         </td>
                                         <td className="set set-1 px-4 py-2">
-                                            {score?.sets?.[0]?.player1 ?? ""}
+                                            {score?.sets?.[0]?.challengee ?? ""}
                                         </td>
                                         <td className="set set-2 px-4 py-2">
-                                            {score?.sets?.[1]?.player1 ?? ""}
+                                            {score?.sets?.[1]?.challengee ?? ""}
                                         </td>
                                         <td className="set set-3 px-4 py-2">
-                                            {score?.sets?.[2]?.player1 ?? ""}
+                                            {score?.sets?.[2]?.challengee ?? ""}
                                         </td>
                                     </tr>
                                     {/* Player 2 */}
                                     <tr
                                         className={`player ${
-                                            winner === match.player2_id
+                                            winner === match.challenger
                                                 ? "bg-green-200 dark:bg-green-700"
                                                 : ""
                                         }`}
                                     >
                                         <td className="name px-4 py-2">
-                                            {getPlayerName(match.player2_id)}
+                                            {getPlayerName(
+                                                getPlayerById(match.challenger, players)
+                                            )}
                                         </td>
                                         <td className="set set-1 px-4 py-2">
-                                            {score?.sets?.[0]?.player2 ?? ""}
+                                            {score?.sets?.[0]?.challenger ?? ""}
                                         </td>
                                         <td className="set set-2 px-4 py-2">
-                                            {score?.sets?.[1]?.player2 ?? ""}
+                                            {score?.sets?.[1]?.challenger ?? ""}
                                         </td>
                                         <td className="set set-3 px-4 py-2">
-                                            {score?.sets?.[2]?.player2 ?? ""}
+                                            {score?.sets?.[2]?.challenger ?? ""}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -164,6 +156,10 @@ export default function Matches() {
                     <p className="text-center dark:text-white">Aucun match joué pour le moment</p>
                 )}
             </section>
+
+            <button type="button" className="w-24 h-16 bg-black text-white" onClick={handleClick}>
+                Test Insert
+            </button>
         </div>
     );
 }

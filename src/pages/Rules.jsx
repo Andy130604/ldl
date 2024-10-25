@@ -17,7 +17,7 @@ export default function Rules() {
                         mieux classé doit accepter ou avoir une bonne excuse.
                     </li>
                     <li>
-                        On peut challenger quelqu’un qui est au maximum 2 positions au-dessus (ex:
+                        On peut challenger quelqu'un qui est au maximum 2 positions au-dessus (ex:
                         4e vs 2e).
                     </li>
                     <li>
