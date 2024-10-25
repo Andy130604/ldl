@@ -21,13 +21,43 @@ export const fetchAllMatches = async () => {
     return data;
 };
 
-export const createMatch = async (player1_id, player2_id, scheduled_at) => {
-    const { data, error } = await supabase
-        .from("matches")
-        .insert([{ player1_id: player1_id, player2_id: player2_id, scheduled_at: scheduled_at }]);
-
-    if (error) console.error(error);
-    return data;
+export const scheduleMatch = async (player1, player2, scheduled_at) => {
+    console.log("Scheduling match between", player1, "and", player2, "at", scheduled_at);
+    if (player1.next_opponent === null && player2.next_opponent === null) {
+        const { data, error1 } = await supabase
+            .from("matches")
+            .insert([
+                {
+                    player1_id: player1.id,
+                    player2_id: player2.id,
+                    played: false,
+                    scheduled_at: scheduled_at
+                }
+            ])
+            .select();
+        if (error1) {
+            console.error(error1);
+            return;
+        }
+        const { error2 } = await supabase
+            .from("players")
+            .update({ next_opponent: player2.id })
+            .eq("id", player1.id);
+        if (error2) {
+            console.error(error2);
+            return;
+        }
+        const { error3 } = await supabase
+            .from("players")
+            .update({ next_opponent: player1.id })
+            .eq("id", player2.id);
+        if (error3) {
+            console.error(error3);
+            return;
+        }
+    } else {
+        console.error("Players already have a match scheduled.");
+    }
 };
 
 export const writeMatchScore = async (match, score, players) => {
@@ -49,5 +79,4 @@ export const writeMatchScore = async (match, score, players) => {
     }
 
     // Update the players with the new ranks or matches streaks
-
 };

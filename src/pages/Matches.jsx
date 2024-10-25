@@ -1,17 +1,25 @@
 import { useEffect, useState } from "react";
-import { fetchAllMatches, fetchAllPlayers } from "../services/database";
+import { fetchAllMatches, fetchAllPlayers, scheduleMatch } from "../services/database";
 import { createPlayersMap } from "../services/utils";
 
 export default function Matches() {
     const [matches, setMatches] = useState([]);
+    const [testPlayers, setTestPlayers] = useState([]);
     const [players, setPlayers] = useState({});
 
     useEffect(() => {
         fetchAllMatches().then((data) => setMatches(data));
+        fetchAllPlayers().then((data) => setTestPlayers(data));
         fetchAllPlayers().then((data) => {
             setPlayers(createPlayersMap(data));
         });
     }, []);
+
+    const handleClick = async () => {
+        await scheduleMatch(testPlayers[4], testPlayers[5], new Date(2024, 11, 5, 11));
+        const data = await fetchAllMatches();
+        setMatches(data);
+    };
 
     const getPlayerName = (id) => players[id] || "Inconnu";
 
@@ -144,6 +152,10 @@ export default function Matches() {
                     <p className="text-center dark:text-white">Aucun match joué pour le moment</p>
                 )}
             </section>
+
+            <button type="button" className="w-24 h-16 bg-black text-white" onClick={handleClick}>
+                Test Insert
+            </button>
         </div>
     );
 }
