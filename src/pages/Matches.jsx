@@ -46,12 +46,13 @@ export default function Matches() {
     const handleScheduleSubmit = async () => {
         const challengee = players.find((p) => p.id == formData.challengee);
         const challenger = players.find((p) => p.id == formData.challenger);
-        const errorMessage = checkIfMatchIsPossible(challengee, challenger);
+        const matchDate = new Date(formData.scheduled_at);
+        const errorMessage = checkIfMatchIsPossible(challengee, challenger, matchDate);
         if (errorMessage) {
             setError(errorMessage);
             return;
         }
-        await scheduleMatch(challengee, challenger, formData.scheduled_at);
+        await scheduleMatch(challengee, challenger, matchDate);
         setShowSchedulePopup(false);
         setError("");
         refreshData();
@@ -81,6 +82,7 @@ export default function Matches() {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+        setError("");
     };
 
     const handleScoreChange = (index, player, value) => {
@@ -90,7 +92,6 @@ export default function Matches() {
             [player]: parseInt(value) || 0 // Convert to integer or set to 0 if input is empty
         };
         setScoreData(newScoreData);
-        setError("");
     };
 
     return (

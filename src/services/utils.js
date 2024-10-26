@@ -31,9 +31,10 @@ export const getPlayerName = (player) => {
     return `${player.first_name} ${player.last_name} (${player.rank})`;
 };
 
-export const checkIfMatchIsPossible = (challengee, challenger) => {
+export const checkIfMatchIsPossible = (challengee, challenger, date) => {
     if (challengee.next_opponent !== null) return "Le joueur défié a déjà un match de prévu";
     if (challenger.next_opponent !== null) return "Le challenger a déjà un match de prévu";
+    if (date == "") return "Veuillez choisir une date pour le match";
     if (
         challengee.last_player_played_id === challenger.id ||
         challenger.last_player_played_id === challengee.id
