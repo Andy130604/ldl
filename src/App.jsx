@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Link, Route, HashRouter as Router, Routes } from "react-router-dom";
 import Matches from "./pages/Matches";
 import Rules from "./pages/Rules";
 import Standings from "./pages/Standings";
@@ -25,7 +25,7 @@ export default function App() {
                             {/* Logo or Branding */}
                             <div className="flex items-center">
                                 <img
-                                    src="/equipe_logo.png"
+                                    src="equipe_logo.png"
                                     alt="Logo"
                                     className="h-8 w-8 mr-2" // Adjust the size as needed
                                 />

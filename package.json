@@ -2,7 +2,7 @@
     "name": "ldl",
     "private": true,
     "version": "0.0.0",
-    "homepage": "https://Andy130604.github.io/ldl",
+    "homepage": "https://Andy130604.github.io/ldl/",
     "type": "module",
     "scripts": {
         "dev": "vite",
