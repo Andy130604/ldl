@@ -32,8 +32,8 @@ export default function Rules() {
                         rencontré d'autres adversaires (encourage plus de matchups).
                     </li>
                     <li>
-                        Tous les matchs doivent être annoncés sur le groupe ainsi que les scores,
-                        avec mise à jour du classement.
+                        Tous les matchs doivent être annoncés sur le site ainsi que les scores, avec
+                        mise à jour du classement.
                     </li>
                     <li>
                         Début des matchs le 19.08.24. Fin à décider, probablement vers mi-fin mars

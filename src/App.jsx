@@ -23,17 +23,22 @@ export default function App() {
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center h-16">
                             {/* Logo or Branding */}
-                            <div className="text-lg font-bold">
+                            <div className="flex items-center">
+                                <img
+                                    src="/equipe_logo.png"
+                                    alt="Logo"
+                                    className="h-8 w-8 mr-2" // Adjust the size as needed
+                                />
                                 <Link
                                     to="/"
-                                    className="text-gray-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                    className="text-lg font-bold text-gray-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                                 >
                                     La Ligue des Légendes
                                 </Link>
                             </div>
 
-                            {/* Menu items */}
-                            <ul className="hidden md:flex space-x-8">
+                            {/* Centered Menu items */}
+                            <ul className="flex-grow flex justify-center space-x-8">
                                 <li>
                                     <Link
                                         to="/"

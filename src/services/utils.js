@@ -30,3 +30,20 @@ export const getPlayerName = (player) => {
     if (!player) return "Jouer inconnu";
     return `${player.first_name} ${player.last_name} (${player.rank})`;
 };
+
+export const checkIfMatchIsPossible = (challengee, challenger) => {
+    if (challengee.next_opponent !== null) return "Le joueur défié a déjà un match de prévu";
+    if (challenger.next_opponent !== null) return "Le challenger a déjà un match de prévu";
+    if (
+        challengee.last_player_played_id === challenger.id ||
+        challenger.last_player_played_id === challengee.id
+    )
+        return "Les joueurs viennent de se rencontrer";
+
+    if (challengee.rank > challenger.rank) return "Le joueur défié doit être mieux classé";
+    if (challenger.rank === challengee.rank) return "Choisissez deux joueurs différents";
+    if (challenger.rank - challengee.rank > 2)
+        return "Le challenger peut défier un joueur classé au maximum 2 rangs au-dessus de lui";
+
+    return null;
+};

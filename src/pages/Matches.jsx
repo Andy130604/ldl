@@ -6,7 +6,7 @@ import {
     writeMatchScore,
     deleteMatch // Import the new delete function
 } from "../services/database";
-import { getPlayerById, getPlayerName } from "../services/utils";
+import { checkIfMatchIsPossible, getPlayerById, getPlayerName } from "../services/utils";
 
 export default function Matches() {
     const [matches, setMatches] = useState([]);
@@ -24,6 +24,7 @@ export default function Matches() {
         { challengee: "", challenger: "" },
         { challengee: "", challenger: "" }
     ]);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         refreshData();
@@ -45,8 +46,14 @@ export default function Matches() {
     const handleScheduleSubmit = async () => {
         const challengee = players.find((p) => p.id == formData.challengee);
         const challenger = players.find((p) => p.id == formData.challenger);
+        const errorMessage = checkIfMatchIsPossible(challengee, challenger);
+        if (errorMessage) {
+            setError(errorMessage);
+            return;
+        }
         await scheduleMatch(challengee, challenger, formData.scheduled_at);
         setShowSchedulePopup(false);
+        setError("");
         refreshData();
     };
 
@@ -83,6 +90,7 @@ export default function Matches() {
             [player]: parseInt(value) || 0 // Convert to integer or set to 0 if input is empty
         };
         setScoreData(newScoreData);
+        setError("");
     };
 
     return (
@@ -264,7 +272,7 @@ export default function Matches() {
                         <h2 className="text-2xl font-semibold mb-4 dark:text-white">
                             Programmer un match
                         </h2>
-                        <label className="block mb-2 dark:text-white">Challengee</label>
+                        <label className="block mb-2 dark:text-white">Challengé</label>
                         <select
                             name="challengee"
                             onChange={handleInputChange}
@@ -309,6 +317,17 @@ export default function Matches() {
                             onChange={handleInputChange}
                             className="mb-4 p-2 border rounded w-full text-black"
                         />
+
+                        {/* Error Message Display */}
+                        {error && (
+                            <div className="bg-red-500 bg-opacity-70 text-white p-4 rounded mb-4 flex items-center">
+                                <span role="img" aria-label="warning" className="mr-2">
+                                    ⚠️
+                                </span>
+                                {error}
+                            </div>
+                        )}
+
                         <button
                             onClick={handleScheduleSubmit}
                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2"

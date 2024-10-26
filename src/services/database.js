@@ -22,45 +22,34 @@ export const fetchAllMatches = async () => {
 };
 
 export const scheduleMatch = async (challengee, challenger, scheduled_at) => {
-    if (
-        challengee.next_opponent === null &&
-        challenger.next_opponent === null &&
-        challenger.rank > challengee.rank &&
-        challenger.rank - challengee.rank <= 2
-    ) {
-        const { error1 } = await supabase.from("matches").insert([
-            {
-                challengee: challengee.id,
-                challenger: challenger.id,
-                played: false,
-                scheduled_at: scheduled_at
-            }
-        ]);
+    const { error1 } = await supabase.from("matches").insert([
+        {
+            challengee: challengee.id,
+            challenger: challenger.id,
+            played: false,
+            scheduled_at: scheduled_at
+        }
+    ]);
 
-        if (error1) {
-            console.error(error1);
-            return;
-        }
-        const { error2 } = await supabase
-            .from("players")
-            .update({ next_opponent: challenger.id })
-            .eq("id", challengee.id);
-        if (error2) {
-            console.error(error2);
-            return;
-        }
-        const { error3 } = await supabase
-            .from("players")
-            .update({ next_opponent: challengee.id })
-            .eq("id", challenger.id);
-        if (error3) {
-            console.error(error3);
-            return;
-        }
-    } else {
-        console.error(
-            "Players already have a match scheduled or there is a rank difference greater than 2"
-        );
+    if (error1) {
+        console.error(error1);
+        return;
+    }
+    const { error2 } = await supabase
+        .from("players")
+        .update({ next_opponent: challenger.id })
+        .eq("id", challengee.id);
+    if (error2) {
+        console.error(error2);
+        return;
+    }
+    const { error3 } = await supabase
+        .from("players")
+        .update({ next_opponent: challengee.id })
+        .eq("id", challenger.id);
+    if (error3) {
+        console.error(error3);
+        return;
     }
 };
 
