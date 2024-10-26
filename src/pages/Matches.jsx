@@ -126,7 +126,14 @@ export default function Matches() {
                                         {getPlayerName(getPlayerById(match.challenger, players))}
                                     </td>
                                     <td className="px-4 py-2">
-                                        {new Date(match.scheduled_at).toLocaleDateString("fr-CH")}
+                                        {new Date(match.scheduled_at).toLocaleDateString("fr-CH", {
+                                            timeZone: "Europe/Zurich",
+                                            year: "2-digit",
+                                            month: "2-digit",
+                                            day: "2-digit",
+                                            hour: "2-digit",
+                                            minute: "2-digit"
+                                        })}
                                     </td>
                                     <td className="px-4 py-2 flex space-x-2">
                                         <button
@@ -169,8 +176,19 @@ export default function Matches() {
                         return (
                             <table
                                 key={index}
-                                className="min-w-full bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden mb-4"
+                                className="min-w-full bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden mb-4 relative"
                             >
+                                {/* Match Date */}
+                                <span className="absolute top-2 left-4 text-gray-500 text-sm dark:text-gray-400">
+                                    {new Date(match.scheduled_at).toLocaleDateString("fr-CH", {
+                                        timeZone: "Europe/Zurich",
+                                        year: "2-digit",
+                                        month: "2-digit",
+                                        day: "2-digit",
+                                        hour: "2-digit",
+                                        minute: "2-digit"
+                                    })}
+                                </span>
                                 <thead>
                                     <tr>
                                         <th className="px-4 py-2"></th>

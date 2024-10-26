@@ -28,17 +28,15 @@ export const scheduleMatch = async (challengee, challenger, scheduled_at) => {
         challenger.rank > challengee.rank &&
         challenger.rank - challengee.rank <= 2
     ) {
-        const { error1 } = await supabase
-            .from("matches")
-            .insert([
-                {
-                    challengee: challengee.id,
-                    challenger: challenger.id,
-                    played: false,
-                    scheduled_at: scheduled_at
-                }
-            ])
-            .select();
+        const { error1 } = await supabase.from("matches").insert([
+            {
+                challengee: challengee.id,
+                challenger: challenger.id,
+                played: false,
+                scheduled_at: scheduled_at
+            }
+        ]);
+
         if (error1) {
             console.error(error1);
             return;
@@ -85,7 +83,7 @@ export const writeMatchScore = async (match, score, challengee, challenger, play
     }
 
     // Update the players with the new ranks or matches streaks
-    if (winner_id === challengee.id) {
+    if (winner_id === challenger.id) {
         const { error2 } = await supabase
             .from("players")
             .update({
@@ -95,8 +93,7 @@ export const writeMatchScore = async (match, score, challengee, challenger, play
                 last_played_is_loss: false,
                 next_opponent: null
             })
-            .eq("id", challengee.id)
-            .select();
+            .eq("id", challengee.id);
         if (error2) {
             console.error(error2);
             return;
@@ -110,15 +107,14 @@ export const writeMatchScore = async (match, score, challengee, challenger, play
                 last_played_is_loss: false,
                 next_opponent: null
             })
-            .eq("id", challenger.id)
-            .select();
+            .eq("id", challenger.id);
 
         if (error3) {
             console.error(error3);
             return;
         }
     } else {
-        const loser = winner_id === challengee.id ? challenger : challengee;
+        const loser = challenger;
         // Update winner
         const { error4 } = await supabase
             .from("players")
@@ -127,12 +123,13 @@ export const writeMatchScore = async (match, score, challengee, challenger, play
                 last_played_is_loss: false,
                 next_opponent: null
             })
-            .eq("id", winner_id)
-            .select();
+            .eq("id", winner_id);
         if (error4) {
             console.error(error4);
             return;
         }
+
+        console.log(loser, players);
 
         if (loser.last_played_is_loss && loser.rank < 7) {
             const { error5 } = await supabase
@@ -140,12 +137,11 @@ export const writeMatchScore = async (match, score, challengee, challenger, play
                 .update({
                     rank: loser.rank + 1,
                     last_rank: loser.rank,
-                    last_played_player_id: winner_id,
+                    last_player_played_id: winner_id,
                     last_played_is_loss: false,
                     next_opponent: null
                 })
-                .eq("id", loser.id)
-                .select();
+                .eq("id", loser.id);
 
             if (error5) {
                 console.error(error5);
@@ -153,11 +149,11 @@ export const writeMatchScore = async (match, score, challengee, challenger, play
             }
 
             const belowPlayer = players.find((player) => player.rank === loser.rank + 1);
+            console.log(belowPlayer);
             const { error6 } = await supabase
                 .from("players")
                 .update({ rank: loser.rank, last_rank: belowPlayer.rank })
-                .eq("id", belowPlayer.id)
-                .select();
+                .eq("id", belowPlayer.id);
 
             if (error6) {
                 console.error(error6);
@@ -171,8 +167,7 @@ export const writeMatchScore = async (match, score, challengee, challenger, play
                     last_played_is_loss: true,
                     next_opponent: null
                 })
-                .eq("id", loser.id)
-                .select();
+                .eq("id", loser.id);
 
             if (error7) {
                 console.error(error7);
